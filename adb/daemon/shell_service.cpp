@@ -363,9 +363,9 @@ bool Subprocess::ForkAndExec(std::string* error) {
 	std::string shell_command = "/sbin/sh";
         if (command_.empty()) {
             // Spawn a login shell if we don't have a command.
-	  execle(shell_command.c_str(), shell_command.c_str(), "-", nullptr, cenv.data());
+            execle("/sbin/sh", "-" "/sbin/sh", nullptr, cenv.data());
         } else {
-            execle(shell_command.c_str(), shell_command.c_str(), "-c", command_.c_str(), nullptr, cenv.data());
+            execle("/sbin/sh", "/sbin/sh", "-c", command_.c_str(), nullptr, cenv.data());
         }
         std::string errmsg = "exec '" + shell_command + "' failed: ";
 	WriteFdExactly(child_error_sfd, errmsg.c_str());
