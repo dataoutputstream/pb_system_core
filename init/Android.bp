@@ -168,7 +168,7 @@ cc_binary {
     symlinks: ["ueventd"],
     target: {
         recovery: {
-            cflags: ["-DRECOVERY", "-static"],
+            cflags: ["-DRECOVERY"],
             exclude_shared_libs: ["libbinder", "libutils"],
         },
     },
