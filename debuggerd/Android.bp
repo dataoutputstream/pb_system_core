@@ -13,6 +13,22 @@ cc_defaults {
     local_include_dirs: ["include"],
 }
 
+cc_defaults {
+    name: "debuggerd_defaults_recovery",
+    recovery_available: true,
+    cflags: [
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-Wno-unused-argument",
+        "-Wno-unused-function",
+        "-Wno-nullability-completeness",
+        "-Os",
+    ],
+
+    local_include_dirs: ["include"],
+}
+
 cc_library_headers {
     name: "libdebuggerd_common_headers",
     export_include_dirs: ["common/include"],
@@ -264,7 +280,8 @@ cc_binary {
         "crash_dump.cpp",
         "util.cpp",
     ],
-    defaults: ["debuggerd_defaults"],
+    defaults: ["debuggerd_defaults_recovery"],
+    recovery_available: true,
 
     compile_multilib: "both",
     multilib: {
