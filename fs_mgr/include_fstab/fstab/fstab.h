@@ -97,7 +97,7 @@ struct FstabEntry {
 using Fstab = std::vector<FstabEntry>;
 
 bool ReadFstabFromFile(const std::string& path, Fstab* fstab);
-bool ReadFstabFromDt(Fstab* fstab, bool log = true);
+// bool ReadFstabFromDt(Fstab* fstab, bool log = true);
 bool ReadDefaultFstab(Fstab* fstab);
 bool SkipMountingPartitions(Fstab* fstab);
 

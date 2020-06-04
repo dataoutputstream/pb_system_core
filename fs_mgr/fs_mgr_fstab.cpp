@@ -345,102 +345,102 @@ std::string InitAndroidDtDir() {
     return android_dt_dir;
 }
 
-bool IsDtFstabCompatible() {
-    std::string dt_value;
-    std::string file_name = get_android_dt_dir() + "/fstab/compatible";
+// bool IsDtFstabCompatible() {
+//     std::string dt_value;
+//     std::string file_name = get_android_dt_dir() + "/fstab/compatible";
 
-    if (ReadDtFile(file_name, &dt_value) && dt_value == "android,fstab") {
-        // If there's no status property or its set to "ok" or "okay", then we use the DT fstab.
-        std::string status_value;
-        std::string status_file_name = get_android_dt_dir() + "/fstab/status";
-        return !ReadDtFile(status_file_name, &status_value) || status_value == "ok" ||
-               status_value == "okay";
-    }
+//     if (ReadDtFile(file_name, &dt_value) && dt_value == "android,fstab") {
+//         // If there's no status property or its set to "ok" or "okay", then we use the DT fstab.
+//         std::string status_value;
+//         std::string status_file_name = get_android_dt_dir() + "/fstab/status";
+//         return !ReadDtFile(status_file_name, &status_value) || status_value == "ok" ||
+//                status_value == "okay";
+//     }
 
-    return false;
-}
+//     return false;
+// }
 
-std::string ReadFstabFromDt() {
-    if (!is_dt_compatible() || !IsDtFstabCompatible()) {
-        return {};
-    }
+// std::string ReadFstabFromDt() {
+//     if (!is_dt_compatible() || !IsDtFstabCompatible()) {
+//         return {};
+//     }
 
-    std::string fstabdir_name = get_android_dt_dir() + "/fstab";
-    std::unique_ptr<DIR, int (*)(DIR*)> fstabdir(opendir(fstabdir_name.c_str()), closedir);
-    if (!fstabdir) return {};
+//     std::string fstabdir_name = get_android_dt_dir() + "/fstab";
+//     std::unique_ptr<DIR, int (*)(DIR*)> fstabdir(opendir(fstabdir_name.c_str()), closedir);
+//     if (!fstabdir) return {};
 
-    dirent* dp;
-    // Each element in fstab_dt_entries is <mount point, the line format in fstab file>.
-    std::vector<std::pair<std::string, std::string>> fstab_dt_entries;
-    while ((dp = readdir(fstabdir.get())) != NULL) {
-        // skip over name, compatible and .
-        if (dp->d_type != DT_DIR || dp->d_name[0] == '.') continue;
+//     dirent* dp;
+//     // Each element in fstab_dt_entries is <mount point, the line format in fstab file>.
+//     std::vector<std::pair<std::string, std::string>> fstab_dt_entries;
+//     while ((dp = readdir(fstabdir.get())) != NULL) {
+//         // skip over name, compatible and .
+//         if (dp->d_type != DT_DIR || dp->d_name[0] == '.') continue;
 
-        // create <dev> <mnt_point>  <type>  <mnt_flags>  <fsmgr_flags>\n
-        std::vector<std::string> fstab_entry;
-        std::string file_name;
-        std::string value;
-        // skip a partition entry if the status property is present and not set to ok
-        file_name = android::base::StringPrintf("%s/%s/status", fstabdir_name.c_str(), dp->d_name);
-        if (ReadDtFile(file_name, &value)) {
-            if (value != "okay" && value != "ok") {
-                LINFO << "dt_fstab: Skip disabled entry for partition " << dp->d_name;
-                continue;
-            }
-        }
+//         // create <dev> <mnt_point>  <type>  <mnt_flags>  <fsmgr_flags>\n
+//         std::vector<std::string> fstab_entry;
+//         std::string file_name;
+//         std::string value;
+//         // skip a partition entry if the status property is present and not set to ok
+//         file_name = android::base::StringPrintf("%s/%s/status", fstabdir_name.c_str(), dp->d_name);
+//         if (ReadDtFile(file_name, &value)) {
+//             if (value != "okay" && value != "ok") {
+//                 LINFO << "dt_fstab: Skip disabled entry for partition " << dp->d_name;
+//                 continue;
+//             }
+//         }
 
-        file_name = android::base::StringPrintf("%s/%s/dev", fstabdir_name.c_str(), dp->d_name);
-        if (!ReadDtFile(file_name, &value)) {
-            LERROR << "dt_fstab: Failed to find device for partition " << dp->d_name;
-            return {};
-        }
-        fstab_entry.push_back(value);
+//         file_name = android::base::StringPrintf("%s/%s/dev", fstabdir_name.c_str(), dp->d_name);
+//         if (!ReadDtFile(file_name, &value)) {
+//             LERROR << "dt_fstab: Failed to find device for partition " << dp->d_name;
+//             return {};
+//         }
+//         fstab_entry.push_back(value);
 
-        std::string mount_point;
-        file_name =
-            android::base::StringPrintf("%s/%s/mnt_point", fstabdir_name.c_str(), dp->d_name);
-        if (ReadDtFile(file_name, &value)) {
-            LINFO << "dt_fstab: Using a specified mount point " << value << " for " << dp->d_name;
-            mount_point = value;
-        } else {
-            mount_point = android::base::StringPrintf("/%s", dp->d_name);
-        }
-        fstab_entry.push_back(mount_point);
+//         std::string mount_point;
+//         file_name =
+//             android::base::StringPrintf("%s/%s/mnt_point", fstabdir_name.c_str(), dp->d_name);
+//         if (ReadDtFile(file_name, &value)) {
+//             LINFO << "dt_fstab: Using a specified mount point " << value << " for " << dp->d_name;
+//             mount_point = value;
+//         } else {
+//             mount_point = android::base::StringPrintf("/%s", dp->d_name);
+//         }
+//         fstab_entry.push_back(mount_point);
 
-        file_name = android::base::StringPrintf("%s/%s/type", fstabdir_name.c_str(), dp->d_name);
-        if (!ReadDtFile(file_name, &value)) {
-            LERROR << "dt_fstab: Failed to find type for partition " << dp->d_name;
-            return {};
-        }
-        fstab_entry.push_back(value);
+//         file_name = android::base::StringPrintf("%s/%s/type", fstabdir_name.c_str(), dp->d_name);
+//         if (!ReadDtFile(file_name, &value)) {
+//             LERROR << "dt_fstab: Failed to find type for partition " << dp->d_name;
+//             return {};
+//         }
+//         fstab_entry.push_back(value);
 
-        file_name = android::base::StringPrintf("%s/%s/mnt_flags", fstabdir_name.c_str(), dp->d_name);
-        if (!ReadDtFile(file_name, &value)) {
-            LERROR << "dt_fstab: Failed to find type for partition " << dp->d_name;
-            return {};
-        }
-        fstab_entry.push_back(value);
+//         file_name = android::base::StringPrintf("%s/%s/mnt_flags", fstabdir_name.c_str(), dp->d_name);
+//         if (!ReadDtFile(file_name, &value)) {
+//             LERROR << "dt_fstab: Failed to find type for partition " << dp->d_name;
+//             return {};
+//         }
+//         fstab_entry.push_back(value);
 
-        file_name = android::base::StringPrintf("%s/%s/fsmgr_flags", fstabdir_name.c_str(), dp->d_name);
-        if (!ReadDtFile(file_name, &value)) {
-            LERROR << "dt_fstab: Failed to find type for partition " << dp->d_name;
-            return {};
-        }
-        fstab_entry.push_back(value);
-        // Adds a fstab_entry to fstab_dt_entries, to be sorted by mount_point later.
-        fstab_dt_entries.emplace_back(mount_point, android::base::Join(fstab_entry, " "));
-    }
+//         file_name = android::base::StringPrintf("%s/%s/fsmgr_flags", fstabdir_name.c_str(), dp->d_name);
+//         if (!ReadDtFile(file_name, &value)) {
+//             LERROR << "dt_fstab: Failed to find type for partition " << dp->d_name;
+//             return {};
+//         }
+//         fstab_entry.push_back(value);
+//         // Adds a fstab_entry to fstab_dt_entries, to be sorted by mount_point later.
+//         fstab_dt_entries.emplace_back(mount_point, android::base::Join(fstab_entry, " "));
+//     }
 
-    // Sort fstab_dt entries, to ensure /vendor is mounted before /vendor/abc is attempted.
-    std::sort(fstab_dt_entries.begin(), fstab_dt_entries.end(),
-              [](const auto& a, const auto& b) { return a.first < b.first; });
+//     // Sort fstab_dt entries, to ensure /vendor is mounted before /vendor/abc is attempted.
+//     std::sort(fstab_dt_entries.begin(), fstab_dt_entries.end(),
+//               [](const auto& a, const auto& b) { return a.first < b.first; });
 
-    std::string fstab_result;
-    for (const auto& [_, dt_entry] : fstab_dt_entries) {
-        fstab_result += dt_entry + "\n";
-    }
-    return fstab_result;
-}
+//     std::string fstab_result;
+//     for (const auto& [_, dt_entry] : fstab_dt_entries) {
+//         fstab_result += dt_entry + "\n";
+//     }
+//     return fstab_result;
+// }
 
 // Identify path to fstab file. Lookup is based on pattern fstab.<hardware>,
 // fstab.<hardware.platform> in folders /odm/etc, vendor/etc, or /.
@@ -668,33 +668,33 @@ bool ReadFstabFromFile(const std::string& path, Fstab* fstab) {
 }
 
 // Returns fstab entries parsed from the device tree if they exist
-bool ReadFstabFromDt(Fstab* fstab, bool log) {
-    std::string fstab_buf = ReadFstabFromDt();
-    if (fstab_buf.empty()) {
-        if (log) LINFO << __FUNCTION__ << "(): failed to read fstab from dt";
-        return false;
-    }
+// bool ReadFstabFromDt(Fstab* fstab, bool log) {
+//     std::string fstab_buf = ReadFstabFromDt();
+//     if (fstab_buf.empty()) {
+//         if (log) LINFO << __FUNCTION__ << "(): failed to read fstab from dt";
+//         return false;
+//     }
 
-    std::unique_ptr<FILE, decltype(&fclose)> fstab_file(
-        fmemopen(static_cast<void*>(const_cast<char*>(fstab_buf.c_str())),
-                 fstab_buf.length(), "r"), fclose);
-    if (!fstab_file) {
-        if (log) PERROR << __FUNCTION__ << "(): failed to create a file stream for fstab dt";
-        return false;
-    }
+//     std::unique_ptr<FILE, decltype(&fclose)> fstab_file(
+//         fmemopen(static_cast<void*>(const_cast<char*>(fstab_buf.c_str())),
+//                  fstab_buf.length(), "r"), fclose);
+//     if (!fstab_file) {
+//         if (log) PERROR << __FUNCTION__ << "(): failed to create a file stream for fstab dt";
+//         return false;
+//     }
 
-    if (!ReadFstabFile(fstab_file.get(), false, fstab)) {
-        if (log) {
-            LERROR << __FUNCTION__ << "(): failed to load fstab from kernel:" << std::endl
-                   << fstab_buf;
-        }
-        return false;
-    }
+//     if (!ReadFstabFile(fstab_file.get(), false, fstab)) {
+//         if (log) {
+//             LERROR << __FUNCTION__ << "(): failed to load fstab from kernel:" << std::endl
+//                    << fstab_buf;
+//         }
+//         return false;
+//     }
 
-    SkipMountingPartitions(fstab);
+//     SkipMountingPartitions(fstab);
 
-    return true;
-}
+//     return true;
+// }
 
 // For GSI to skip mounting /product and /product_services, until there are
 // well-defined interfaces between them and /system. Otherwise, the GSI flashed
@@ -728,10 +728,10 @@ bool SkipMountingPartitions(Fstab* fstab) {
 
 // Loads the fstab file and combines with fstab entries passed in from device tree.
 bool ReadDefaultFstab(Fstab* fstab) {
-    Fstab dt_fstab;
-    ReadFstabFromDt(&dt_fstab, false);
+    // Fstab dt_fstab;
+    // ReadFstabFromDt(&dt_fstab, false);
 
-    *fstab = std::move(dt_fstab);
+    // *fstab = std::move(dt_fstab);
 
     std::string default_fstab_path;
     // Use different fstab paths for normal boot and recovery boot, respectively

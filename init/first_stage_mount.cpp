@@ -53,7 +53,7 @@ using android::fs_mgr::BuildGsiSystemFstabEntry;
 using android::fs_mgr::Fstab;
 using android::fs_mgr::FstabEntry;
 using android::fs_mgr::ReadDefaultFstab;
-using android::fs_mgr::ReadFstabFromDt;
+// using android::fs_mgr::ReadFstabFromDt;
 using android::fs_mgr::SkipMountingPartitions;
 
 using namespace std::literals;
@@ -146,7 +146,7 @@ static inline bool IsDtVbmetaCompatible(const Fstab& fstab) {
 
 static Fstab ReadFirstStageFstab() {
     Fstab fstab;
-    if (!ReadFstabFromDt(&fstab)) {
+    // if (!ReadFstabFromDt(&fstab)) {
         if (ReadDefaultFstab(&fstab)) {
             fstab.erase(std::remove_if(fstab.begin(), fstab.end(),
                                        [](const auto& entry) {
@@ -156,7 +156,7 @@ static Fstab ReadFirstStageFstab() {
         } else {
             LOG(INFO) << "Failed to fstab for first stage mount";
         }
-    }
+    // }
     return fstab;
 }
 
